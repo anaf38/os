@@ -1,0 +1,46 @@
+#include <functional>
+#include <mutex>
+#include <vector>
+
+class DiningPhilosophers {
+private:
+    
+    std::vector<std::mutex> forks;
+    
+    std::mutex global_lock;
+
+public:
+    DiningPhilosophers() : forks(5) {
+       
+    }
+
+    void wantsToEat(int philosopher,
+                    std::function<void()> pickLeftFork,
+                    std::function<void()> pickRightFork,
+                    std::function<void()> eat,
+                    std::function<void()> putLeftFork,
+                    std::function<void()> putRightFork) {
+        
+        int left_fork_id = philosopher;
+        int right_fork_id = (philosopher + 1) % 5;
+        
+      
+        {
+            std::lock_guard<std::mutex> lock(global_lock);
+            
+            forks[left_fork_id].lock();
+            forks[right_fork_id].lock();
+        }
+      
+        pickLeftFork();
+        pickRightFork();
+        eat();
+        
+        
+        putLeftFork();
+        forks[left_fork_id].unlock();
+        
+        putRightFork();
+        forks[right_fork_id].unlock();
+    }
+};
